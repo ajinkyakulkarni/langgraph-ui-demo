@@ -193,26 +193,6 @@ export default function ConfigurableNode({ data, selected }: ConfigurableNodePro
         </div>
       )}
 
-      {/* Action Buttons */}
-      <div className="px-4 py-3 flex justify-between items-center border-t border-opacity-20 border-white">
-        <button className="text-xs text-white opacity-70 hover:opacity-100 transition-opacity">
-          Edit content here...
-        </button>
-        <div className="flex space-x-2">
-          <button 
-            className="p-1.5 rounded text-white hover:opacity-80 transition-opacity"
-            style={{ backgroundColor: colors.style.borderColor }}
-          >
-            <FaPlay className="w-3 h-3" />
-          </button>
-          <button 
-            className="p-1.5 rounded text-white hover:opacity-80 transition-opacity"
-            style={{ backgroundColor: colors.style.borderColor }}
-          >
-            <FaCog className="w-3 h-3" />
-          </button>
-        </div>
-      </div>
 
       <Handle type="source" position={Position.Bottom} className="w-3 h-3" />
     </div>

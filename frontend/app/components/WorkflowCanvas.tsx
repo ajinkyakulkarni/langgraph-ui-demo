@@ -45,11 +45,11 @@ const WorkflowCanvas = forwardRef(({ workflow, workflowState }: WorkflowCanvasPr
     const newEdges: Edge[] = [];
     
     // Tree layout configuration
-    const startX = 800;
+    const startX = 1200;
     const startY = 50;
-    const levelHeight = 300;
+    const levelHeight = 400;
     const nodeWidth = 400;
-    const siblingSpacing = 500;
+    const siblingSpacing = 700;
     
     // Level 0: Start node
     newNodes.push({
@@ -92,8 +92,15 @@ const WorkflowCanvas = forwardRef(({ workflow, workflowState }: WorkflowCanvasPr
       source: 'start',
       target: 'planner',
       type: 'smoothstep',
+      style: {
+        strokeWidth: 3,
+        stroke: '#6b7280',
+      },
       markerEnd: {
         type: MarkerType.ArrowClosed,
+        width: 25,
+        height: 25,
+        color: '#6b7280',
       },
     });
 
@@ -161,8 +168,15 @@ const WorkflowCanvas = forwardRef(({ workflow, workflowState }: WorkflowCanvasPr
         source: 'planner',
         target: nodeId,
         type: 'smoothstep',
+        style: {
+          strokeWidth: 3,
+          stroke: '#6b7280',
+        },
         markerEnd: {
           type: MarkerType.ArrowClosed,
+          width: 25,
+          height: 25,
+          color: '#6b7280',
         },
       });
     });
@@ -200,8 +214,15 @@ const WorkflowCanvas = forwardRef(({ workflow, workflowState }: WorkflowCanvasPr
         source: nodeId,
         target: 'summarizer',
         type: 'smoothstep',
+        style: {
+          strokeWidth: 3,
+          stroke: '#6b7280',
+        },
         markerEnd: {
           type: MarkerType.ArrowClosed,
+          width: 25,
+          height: 25,
+          color: '#6b7280',
         },
       });
     });
@@ -224,8 +245,15 @@ const WorkflowCanvas = forwardRef(({ workflow, workflowState }: WorkflowCanvasPr
       source: 'summarizer',
       target: 'end',
       type: 'smoothstep',
+      style: {
+        strokeWidth: 3,
+        stroke: '#6b7280',
+      },
       markerEnd: {
         type: MarkerType.ArrowClosed,
+        width: 25,
+        height: 25,
+        color: '#6b7280',
       },
     });
 
@@ -332,6 +360,8 @@ const WorkflowCanvas = forwardRef(({ workflow, workflowState }: WorkflowCanvasPr
 
   const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
     setSelectedNode(node);
+    setEditingNode(node);
+    setTempParameters(node.data.parameters || {});
   }, []);
 
   const onAddNode = (type: string) => {
@@ -428,129 +458,164 @@ const WorkflowCanvas = forwardRef(({ workflow, workflowState }: WorkflowCanvasPr
         onNodeClick={onNodeClick}
         nodeTypes={nodeTypes}
         fitView
+        minZoom={0.1}
+        maxZoom={1.5}
+        defaultViewport={{ x: 0, y: 0, zoom: 0.5 }}
       >
         <Controls />
-        <MiniMap />
+        <MiniMap 
+          nodeStrokeColor={(n) => {
+            if (n.data?.status === 'executing') return '#3b82f6';
+            if (n.data?.status === 'completed') return '#10b981';
+            return '#6b7280';
+          }}
+          nodeColor={(n) => {
+            if (n.data?.status === 'executing') return '#3b82f6';
+            if (n.data?.status === 'completed') return '#10b981';
+            return '#e5e7eb';
+          }}
+          maskColor="rgb(50, 50, 50, 0.8)"
+        />
         <Background variant="dots" gap={12} size={1} />
       </ReactFlow>
 
-      {selectedNode && (
-        <div className="absolute bottom-4 right-4 bg-white rounded-lg shadow-md p-4 w-80">
-          <h3 className="font-semibold mb-2">Node Configuration</h3>
-          <div className="space-y-2 text-sm">
-            <div>
-              <p className="text-gray-600">ID: {selectedNode.id}</p>
-              <p className="text-gray-600">Type: {selectedNode.data.type}</p>
-              <p className="text-gray-600">Status: {selectedNode.data.status || 'pending'}</p>
-            </div>
-            
-            {selectedNode.data.description && (
-              <div className="border-t pt-2">
-                <p className="font-medium">Description:</p>
-                <p className="text-gray-600">{selectedNode.data.description}</p>
-              </div>
-            )}
-            
-            {selectedNode.data.parameters && Object.keys(selectedNode.data.parameters).length > 0 && (
-              <div className="border-t pt-2">
-                <p className="font-medium">Parameters:</p>
-                {Object.entries(selectedNode.data.parameters).map(([key, value]) => (
-                  <div key={key} className="flex justify-between text-gray-600">
-                    <span>{key}:</span>
-                    <span>{value as string}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-            
-            {selectedNode.data.guardrails && (
-              <div className="border-t pt-2">
-                <p className="font-medium">Guardrails:</p>
-                {selectedNode.data.guardrails.input?.length > 0 && (
-                  <div className="text-gray-600">
-                    <p className="text-xs">Input:</p>
-                    <ul className="list-disc list-inside text-xs">
-                      {selectedNode.data.guardrails.input.map((item: string, i: number) => (
-                        <li key={i}>{item}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                {selectedNode.data.guardrails.output?.length > 0 && (
-                  <div className="text-gray-600 mt-1">
-                    <p className="text-xs">Output:</p>
-                    <ul className="list-disc list-inside text-xs">
-                      {selectedNode.data.guardrails.output.map((item: string, i: number) => (
-                        <li key={i}>{item}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            )}
-            
-            <div className="border-t pt-3 flex space-x-2">
-              <button className="flex-1 px-3 py-2 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 transition-colors">
-                Execute Node
-              </button>
-              <button 
-                onClick={() => {
-                  setEditingNode(selectedNode);
-                  setTempParameters(selectedNode.data.parameters || {});
-                }}
-                className="flex-1 px-3 py-2 bg-gray-500 text-white text-sm rounded hover:bg-gray-600 transition-colors"
-              >
-                Configure
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Parameter Edit Modal */}
       {editingNode && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg shadow-xl p-6 w-96 max-h-[80vh] overflow-y-auto">
-            <h3 className="text-lg font-semibold mb-4">Configure {editingNode.data.label}</h3>
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setEditingNode(null);
+              setTempParameters({});
+            }
+          }}
+        >
+          <div className="bg-white rounded-lg shadow-xl p-6 w-[500px] max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h3 className="text-lg font-semibold">{editingNode.data.label}</h3>
+                {editingNode.data.description && (
+                  <p className="text-sm text-gray-600 mt-1">{editingNode.data.description}</p>
+                )}
+              </div>
+              <button
+                onClick={() => {
+                  setEditingNode(null);
+                  setTempParameters({});
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
             
-            <div className="space-y-4">
-              {Object.entries(tempParameters).map(([key, value]) => (
-                <div key={key}>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {key}
-                  </label>
-                  <input
-                    type="text"
-                    value={value}
-                    onChange={(e) => setTempParameters({
-                      ...tempParameters,
-                      [key]: e.target.value
-                    })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+            <div className="space-y-6">
+              {/* Parameters Section */}
+              {Object.keys(tempParameters).length > 0 && (
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-3">Parameters</h4>
+                  <div className="space-y-3">
+                    {Object.entries(tempParameters).map(([key, value]) => (
+                      <div key={key}>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          {key}
+                        </label>
+                        <input
+                          type="text"
+                          value={value}
+                          onChange={(e) => setTempParameters({
+                            ...tempParameters,
+                            [key]: e.target.value
+                          })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              ))}
+              )}
+
+              {/* Output Section */}
+              {editingNode.data.output && (
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-3">Output</h4>
+                  <div className="bg-gray-50 p-3 rounded-md">
+                    <pre className="text-sm text-gray-700 whitespace-pre-wrap">
+                      {typeof editingNode.data.output === 'string' 
+                        ? editingNode.data.output 
+                        : JSON.stringify(editingNode.data.output, null, 2)}
+                    </pre>
+                  </div>
+                </div>
+              )}
+
+              {/* Guardrails Section */}
+              {editingNode.data.guardrails && (editingNode.data.guardrails.input?.length > 0 || editingNode.data.guardrails.output?.length > 0) && (
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-3">Guardrails</h4>
+                  <div className="space-y-2">
+                    {editingNode.data.guardrails.input?.length > 0 && (
+                      <div>
+                        <p className="text-sm font-medium text-gray-700">Input:</p>
+                        <ul className="list-disc list-inside text-sm text-gray-600 ml-2">
+                          {editingNode.data.guardrails.input.map((item: string, i: number) => (
+                            <li key={i}>{item}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {editingNode.data.guardrails.output?.length > 0 && (
+                      <div>
+                        <p className="text-sm font-medium text-gray-700">Output:</p>
+                        <ul className="list-disc list-inside text-sm text-gray-600 ml-2">
+                          {editingNode.data.guardrails.output.map((item: string, i: number) => (
+                            <li key={i}>{item}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
               
-              <div className="flex justify-end space-x-2 pt-4">
+              {/* Action Buttons */}
+              <div className="flex justify-between items-center pt-4 border-t">
                 <button
                   onClick={() => {
-                    setEditingNode(null);
-                    setTempParameters({});
+                    // TODO: Implement rerun functionality
+                    console.log('Rerun node:', editingNode.id);
                   }}
-                  className="px-4 py-2 text-gray-700 bg-gray-200 rounded hover:bg-gray-300 transition-colors"
+                  className="flex items-center px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
                 >
-                  Cancel
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  Rerun
                 </button>
-                <button
-                  onClick={() => {
-                    updateNodeParameters(editingNode.id, tempParameters);
-                    setEditingNode(null);
-                    setTempParameters({});
-                  }}
-                  className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-                >
-                  Save Changes
-                </button>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => {
+                      setEditingNode(null);
+                      setTempParameters({});
+                    }}
+                    className="px-4 py-2 text-gray-700 bg-gray-200 rounded hover:bg-gray-300 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      updateNodeParameters(editingNode.id, tempParameters);
+                      setEditingNode(null);
+                      setTempParameters({});
+                    }}
+                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                  >
+                    Save Changes
+                  </button>
+                </div>
               </div>
             </div>
           </div>
