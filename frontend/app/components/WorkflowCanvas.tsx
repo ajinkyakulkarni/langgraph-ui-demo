@@ -34,6 +34,8 @@ const WorkflowCanvas = forwardRef(({ workflow, workflowState }: WorkflowCanvasPr
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [executingNode, setExecutingNode] = useState<string | null>(null);
   const [workflowStarted, setWorkflowStarted] = useState(false);
+  const [editingNode, setEditingNode] = useState<Node | null>(null);
+  const [tempParameters, setTempParameters] = useState<Record<string, string>>({});
 
   // Create workflow from plan
   const createWorkflowFromPlan = (plan: any) => {
@@ -43,7 +45,7 @@ const WorkflowCanvas = forwardRef(({ workflow, workflowState }: WorkflowCanvasPr
       {
         id: 'start',
         type: 'start',
-        position: { x: 250, y: 50 },
+        position: { x: 400, y: 50 },
         data: { 
           label: 'Start',
           type: 'start',
@@ -54,19 +56,20 @@ const WorkflowCanvas = forwardRef(({ workflow, workflowState }: WorkflowCanvasPr
 
     const newEdges: Edge[] = [];
     let prevNodeId = 'start';
-    let yPos = 150;
+    let yPos = 200;
 
     // Add planner node
     newNodes.push({
       id: 'planner',
       type: 'configurable',
-      position: { x: 250, y: yPos },
+      position: { x: 400, y: yPos },
       data: {
         label: 'PLANNER',
         description: 'Analyzes research goals and creates AI workflow to achieve them',
         type: 'agent',
         agent: 'planner',
         status: 'completed',
+        color: 'blue',
         parameters: {
           'Goal Focus': 'Research objectives',
           'Output': 'AI workflow plan'
@@ -88,7 +91,7 @@ const WorkflowCanvas = forwardRef(({ workflow, workflowState }: WorkflowCanvasPr
     });
 
     prevNodeId = 'planner';
-    yPos += 150;
+    yPos += 200;
 
     // Add nodes for each step in the plan
     plan.steps.forEach((step: any, index: number) => {
@@ -111,6 +114,7 @@ const WorkflowCanvas = forwardRef(({ workflow, workflowState }: WorkflowCanvasPr
 
       if (step.agent === 'literature_search') {
         nodeConfig.label = 'LITERATURE SEARCH AGENT';
+        nodeConfig.color = 'orange';
         nodeConfig.parameters = {
           'Type of Review': 'Systematic',
           'Time Range': '2020-2024',
@@ -122,6 +126,7 @@ const WorkflowCanvas = forwardRef(({ workflow, workflowState }: WorkflowCanvasPr
         };
       } else if (step.agent === 'code_search') {
         nodeConfig.label = 'CODE SEARCH AGENT';
+        nodeConfig.color = 'purple';
         nodeConfig.parameters = {
           'Search Scope': 'GitHub + GitLab',
           'Languages': 'Python, JavaScript',
@@ -133,10 +138,13 @@ const WorkflowCanvas = forwardRef(({ workflow, workflowState }: WorkflowCanvasPr
         };
       }
       
+      // Position nodes in a grid
+      const xPos = index % 2 === 0 ? 200 : 600;
+      
       newNodes.push({
         id: nodeId,
         type: 'configurable',
-        position: { x: 250, y: yPos },
+        position: { x: xPos, y: yPos },
         data: nodeConfig,
       });
 
@@ -150,20 +158,24 @@ const WorkflowCanvas = forwardRef(({ workflow, workflowState }: WorkflowCanvasPr
       });
 
       prevNodeId = nodeId;
-      yPos += 150;
+      if (index % 2 === 1) {
+        yPos += 200;
+      }
     });
 
     // Add summarizer node
+    yPos += 200; // Add extra space before summarizer
     newNodes.push({
       id: 'summarizer',
       type: 'configurable',
-      position: { x: 250, y: yPos },
+      position: { x: 400, y: yPos },
       data: {
         label: 'SUMMARY AGENT',
         description: 'Synthesizes findings and generates comprehensive report',
         type: 'agent',
         agent: 'summarizer',
         status: 'pending',
+        color: 'green',
         parameters: {
           'Summary Length': 'Detailed',
           'Include Citations': 'Yes',
@@ -186,13 +198,13 @@ const WorkflowCanvas = forwardRef(({ workflow, workflowState }: WorkflowCanvasPr
     });
 
     prevNodeId = 'summarizer';
-    yPos += 150;
+    yPos += 200;
 
     // Add end node
     newNodes.push({
       id: 'end',
       type: 'end',
-      position: { x: 250, y: yPos },
+      position: { x: 400, y: yPos },
       data: { 
         label: 'End',
         type: 'end',
@@ -334,6 +346,23 @@ const WorkflowCanvas = forwardRef(({ workflow, workflowState }: WorkflowCanvasPr
     setNodes((nds) => nds.concat(newNode));
   };
 
+  const updateNodeParameters = (nodeId: string, parameters: Record<string, string>) => {
+    setNodes((nds) =>
+      nds.map((node) => {
+        if (node.id === nodeId) {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              parameters: parameters,
+            },
+          };
+        }
+        return node;
+      })
+    );
+  };
+
   const getNodeStyle = (status: string) => {
     switch (status) {
       case 'executing':
@@ -456,9 +485,65 @@ const WorkflowCanvas = forwardRef(({ workflow, workflowState }: WorkflowCanvasPr
               <button className="flex-1 px-3 py-2 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 transition-colors">
                 Execute Node
               </button>
-              <button className="flex-1 px-3 py-2 bg-gray-500 text-white text-sm rounded hover:bg-gray-600 transition-colors">
+              <button 
+                onClick={() => {
+                  setEditingNode(selectedNode);
+                  setTempParameters(selectedNode.data.parameters || {});
+                }}
+                className="flex-1 px-3 py-2 bg-gray-500 text-white text-sm rounded hover:bg-gray-600 transition-colors"
+              >
                 Configure
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Parameter Edit Modal */}
+      {editingNode && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg shadow-xl p-6 w-96 max-h-[80vh] overflow-y-auto">
+            <h3 className="text-lg font-semibold mb-4">Configure {editingNode.data.label}</h3>
+            
+            <div className="space-y-4">
+              {Object.entries(tempParameters).map(([key, value]) => (
+                <div key={key}>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    {key}
+                  </label>
+                  <input
+                    type="text"
+                    value={value}
+                    onChange={(e) => setTempParameters({
+                      ...tempParameters,
+                      [key]: e.target.value
+                    })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              ))}
+              
+              <div className="flex justify-end space-x-2 pt-4">
+                <button
+                  onClick={() => {
+                    setEditingNode(null);
+                    setTempParameters({});
+                  }}
+                  className="px-4 py-2 text-gray-700 bg-gray-200 rounded hover:bg-gray-300 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    updateNodeParameters(editingNode.id, tempParameters);
+                    setEditingNode(null);
+                    setTempParameters({});
+                  }}
+                  className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                >
+                  Save Changes
+                </button>
+              </div>
             </div>
           </div>
         </div>
