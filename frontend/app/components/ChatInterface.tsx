@@ -18,7 +18,7 @@ interface ChatInterfaceProps {
 
 export default function ChatInterface({ workflow, onWorkflowUpdate }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState('What are the latest transformer-based architectures for multimodal learning that combine vision and language, and how do they compare to traditional approaches in terms of performance and computational efficiency?');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const wsRef = useRef<WebSocket | null>(null);
@@ -266,22 +266,25 @@ export default function ChatInterface({ workflow, onWorkflowUpdate }: ChatInterf
       </div>
 
       <form onSubmit={handleSubmit} className="border-t border-gray-200 p-4">
-        <div className="flex space-x-2">
-          <input
-            type="text"
+        <div className="flex flex-col space-y-2">
+          <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="What are the latest transformer-based architectures for multimodal learning that combine vision and language, and how do they compare to traditional approaches?"
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
+            placeholder="Enter your research question..."
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white resize-none"
             disabled={isLoading}
+            rows={4}
           />
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
-          >
-            <FaPaperPlane className="w-4 h-4" />
-          </button>
+          <div className="flex justify-end">
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center space-x-2"
+            >
+              <span>Submit</span>
+              <FaPaperPlane className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </form>
     </div>
