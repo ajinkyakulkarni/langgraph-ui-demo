@@ -271,7 +271,7 @@ export default function ChatInterface({ workflow, onWorkflowUpdate }: ChatInterf
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Enter your research question..."
+            placeholder="What are the latest transformer-based architectures for multimodal learning that combine vision and language, and how do they compare to traditional approaches?"
             className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
             disabled={isLoading}
           />
