@@ -1,3 +1,4 @@
 {
+  "/not-found": "app/not-found.js",
   "/workflow/page": "app/workflow/page.js"
 }

@@ -41,28 +41,30 @@ const WorkflowCanvas = forwardRef(({ workflow, workflowState }: WorkflowCanvasPr
   const createWorkflowFromPlan = (plan: any) => {
     if (!plan || !plan.steps) return;
 
-    const newNodes: Node[] = [
-      {
-        id: 'start',
-        type: 'start',
-        position: { x: 400, y: 50 },
-        data: { 
-          label: 'Start',
-          type: 'start',
-          status: 'completed'
-        },
-      },
-    ];
+    const centerX = 600;
+    const startY = 50;
+    const nodeSpacing = 250;
 
+    const newNodes: Node[] = [];
     const newEdges: Edge[] = [];
-    let prevNodeId = 'start';
-    let yPos = 200;
+    
+    // Add start node
+    newNodes.push({
+      id: 'start',
+      type: 'start',
+      position: { x: centerX, y: startY },
+      data: { 
+        label: 'Start',
+        type: 'start',
+        status: 'completed'
+      },
+    });
 
     // Add planner node
     newNodes.push({
       id: 'planner',
       type: 'configurable',
-      position: { x: 400, y: yPos },
+      position: { x: centerX, y: startY + nodeSpacing },
       data: {
         label: 'PLANNER',
         description: 'Analyzes research goals and creates AI workflow to achieve them',
@@ -90,12 +92,20 @@ const WorkflowCanvas = forwardRef(({ workflow, workflowState }: WorkflowCanvasPr
       },
     });
 
-    prevNodeId = 'planner';
-    yPos += 200;
+    // Calculate positions for parallel nodes
+    const parallelNodes = plan.steps.length;
+    const horizontalSpacing = 450;
+    let currentY = startY + nodeSpacing * 2;
 
-    // Add nodes for each step in the plan
+    // Add step nodes
     plan.steps.forEach((step: any, index: number) => {
       const nodeId = step.agent || step.id || `node_${index}`;
+      
+      // Position nodes side by side if there are exactly 2
+      let xPos = centerX;
+      if (parallelNodes === 2) {
+        xPos = index === 0 ? centerX - horizontalSpacing/2 : centerX + horizontalSpacing/2;
+      }
       
       // Determine node configuration based on agent type
       let nodeConfig: any = {
@@ -138,37 +148,30 @@ const WorkflowCanvas = forwardRef(({ workflow, workflowState }: WorkflowCanvasPr
         };
       }
       
-      // Position nodes in a grid
-      const xPos = index % 2 === 0 ? 200 : 600;
-      
       newNodes.push({
         id: nodeId,
         type: 'configurable',
-        position: { x: xPos, y: yPos },
+        position: { x: xPos, y: currentY },
         data: nodeConfig,
       });
 
+      // Connect from planner to each agent
       newEdges.push({
-        id: `edge_${prevNodeId}_${nodeId}`,
-        source: prevNodeId,
+        id: `edge_planner_${nodeId}`,
+        source: 'planner',
         target: nodeId,
         markerEnd: {
           type: MarkerType.ArrowClosed,
         },
       });
-
-      prevNodeId = nodeId;
-      if (index % 2 === 1) {
-        yPos += 200;
-      }
     });
 
     // Add summarizer node
-    yPos += 200; // Add extra space before summarizer
+    const summarizerY = currentY + nodeSpacing;
     newNodes.push({
       id: 'summarizer',
       type: 'configurable',
-      position: { x: 400, y: yPos },
+      position: { x: centerX, y: summarizerY },
       data: {
         label: 'SUMMARY AGENT',
         description: 'Synthesizes findings and generates comprehensive report',
@@ -188,23 +191,24 @@ const WorkflowCanvas = forwardRef(({ workflow, workflowState }: WorkflowCanvasPr
       },
     });
 
-    newEdges.push({
-      id: `edge_${prevNodeId}_summarizer`,
-      source: prevNodeId,
-      target: 'summarizer',
-      markerEnd: {
-        type: MarkerType.ArrowClosed,
-      },
+    // Connect all step nodes to summarizer
+    plan.steps.forEach((step: any, index: number) => {
+      const nodeId = step.agent || step.id || `node_${index}`;
+      newEdges.push({
+        id: `edge_${nodeId}_summarizer`,
+        source: nodeId,
+        target: 'summarizer',
+        markerEnd: {
+          type: MarkerType.ArrowClosed,
+        },
+      });
     });
-
-    prevNodeId = 'summarizer';
-    yPos += 200;
 
     // Add end node
     newNodes.push({
       id: 'end',
       type: 'end',
-      position: { x: 400, y: yPos },
+      position: { x: centerX, y: summarizerY + nodeSpacing },
       data: { 
         label: 'End',
         type: 'end',
@@ -213,8 +217,8 @@ const WorkflowCanvas = forwardRef(({ workflow, workflowState }: WorkflowCanvasPr
     });
 
     newEdges.push({
-      id: `edge_${prevNodeId}_end`,
-      source: prevNodeId,
+      id: `edge_summarizer_end`,
+      source: 'summarizer',
       target: 'end',
       markerEnd: {
         type: MarkerType.ArrowClosed,
