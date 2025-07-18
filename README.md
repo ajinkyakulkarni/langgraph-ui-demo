@@ -2,7 +2,7 @@
 
 A visual workflow builder powered by LangGraph for intelligent research automation. Build, visualize, and execute complex AI agent workflows through an intuitive drag-and-drop interface.
 
-![LangGraph Workflow Builder](docs/images/workflow-demo.png)
+![LangGraph Workflow Builder](demo.gif)
 
 ## 🚀 Features
 

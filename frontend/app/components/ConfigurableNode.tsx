@@ -34,6 +34,7 @@ export default function ConfigurableNode({ data, selected }: ConfigurableNodePro
         border: `border-${baseColor}-600`,
         iconBg: `bg-${baseColor}-600`,
         animate: 'animate-pulse',
+        isDark: true,
         style: {
           backgroundColor: getColorHex(baseColor, 500),
           borderColor: getColorHex(baseColor, 600),
@@ -47,6 +48,7 @@ export default function ConfigurableNode({ data, selected }: ConfigurableNodePro
         border: `border-${baseColor}-600`,
         iconBg: `bg-${baseColor}-600`,
         animate: '',
+        isDark: true,
         style: {
           backgroundColor: getColorHex(baseColor, 500),
           borderColor: getColorHex(baseColor, 600),
@@ -61,6 +63,7 @@ export default function ConfigurableNode({ data, selected }: ConfigurableNodePro
         border: 'border-red-600',
         iconBg: 'bg-red-600',
         animate: '',
+        isDark: true,
         style: {
           backgroundColor: '#ef4444',
           borderColor: '#dc2626',
@@ -73,6 +76,7 @@ export default function ConfigurableNode({ data, selected }: ConfigurableNodePro
       border: 'border-gray-300',
       iconBg: 'bg-gray-200',
       animate: '',
+      isDark: false,
       style: {
         backgroundColor: '#f3f4f6',
         borderColor: '#d1d5db',
@@ -121,19 +125,19 @@ export default function ConfigurableNode({ data, selected }: ConfigurableNodePro
       <div 
         className={`px-4 py-3 rounded-t-lg flex items-center justify-between`}
         style={{
-          backgroundColor: colors.style.borderColor || getColorHex(data.color || 'gray', 600),
+          backgroundColor: colors.isDark ? (colors.style.borderColor || getColorHex(data.color || 'gray', 600)) : '#e5e7eb',
         }}
       >
         <div className="flex items-center space-x-2">
-          <span className="font-bold text-sm text-white">{data.label}</span>
+          <span className={`font-bold text-sm ${colors.isDark ? 'text-white' : 'text-gray-800'}`}>{data.label}</span>
           {getStatusIcon()}
         </div>
-        <BiDotsHorizontalRounded className="w-5 h-5 text-white cursor-pointer" />
+        <BiDotsHorizontalRounded className={`w-5 h-5 cursor-pointer ${colors.isDark ? 'text-white' : 'text-gray-700'}`} />
       </div>
 
       {/* Description */}
       {data.description && (
-        <div className="px-4 py-2 text-xs text-white opacity-90 italic border-b border-white border-opacity-20">
+        <div className={`px-4 py-2 text-xs opacity-90 italic border-b ${colors.isDark ? 'text-white border-white' : 'text-gray-700 border-gray-300'} border-opacity-20`}>
           {data.description}
         </div>
       )}
@@ -142,14 +146,14 @@ export default function ConfigurableNode({ data, selected }: ConfigurableNodePro
       {data.parameters && Object.keys(data.parameters).length > 0 && (
         <div className="px-4 py-3 space-y-2">
           <div className="flex items-center justify-between text-xs">
-            <span className="font-semibold text-white">Parameters</span>
-            <span className="text-white opacity-70">▲</span>
+            <span className={`font-semibold ${colors.isDark ? 'text-white' : 'text-gray-800'}`}>Parameters</span>
+            <span className={`${colors.isDark ? 'text-white' : 'text-gray-600'} opacity-70`}>▲</span>
           </div>
           <div className="space-y-1">
             {Object.entries(data.parameters).map(([key, value]) => (
               <div key={key} className="flex justify-between text-xs">
-                <span className="text-white opacity-80">{key}:</span>
-                <span className="text-white font-medium">{value}</span>
+                <span className={`${colors.isDark ? 'text-white' : 'text-gray-600'} opacity-80`}>{key}:</span>
+                <span className={`${colors.isDark ? 'text-white' : 'text-gray-800'} font-medium`}>{value}</span>
               </div>
             ))}
           </div>
@@ -157,19 +161,19 @@ export default function ConfigurableNode({ data, selected }: ConfigurableNodePro
       )}
 
       {/* Output Section */}
-      <div className="px-4 py-3 space-y-2 border-t border-opacity-20 border-white">
+      <div className={`px-4 py-3 space-y-2 border-t border-opacity-20 ${colors.isDark ? 'border-white' : 'border-gray-300'}`}>
         <div className="flex items-center justify-between text-xs">
-          <span className="font-semibold text-white">Output</span>
-          <span className="text-white opacity-70">▲</span>
+          <span className={`font-semibold ${colors.isDark ? 'text-white' : 'text-gray-800'}`}>Output</span>
+          <span className={`${colors.isDark ? 'text-white' : 'text-gray-600'} opacity-70`}>▲</span>
         </div>
         {data.output ? (
-          <div className="text-xs text-white bg-black bg-opacity-10 p-2 rounded">
+          <div className={`text-xs p-2 rounded ${colors.isDark ? 'text-white bg-black bg-opacity-10' : 'text-gray-800 bg-gray-200'}`}>
             {typeof data.output === 'string' 
               ? data.output 
               : JSON.stringify(data.output, null, 2).substring(0, 100) + '...'}
           </div>
         ) : (
-          <div className="text-xs text-white opacity-60 italic">
+          <div className={`text-xs ${colors.isDark ? 'text-white' : 'text-gray-600'} opacity-60 italic`}>
             {data.status === 'executing' ? 'Processing...' : 'No output yet'}
           </div>
         )}
@@ -177,16 +181,16 @@ export default function ConfigurableNode({ data, selected }: ConfigurableNodePro
 
       {/* Guardrails Section */}
       {data.guardrails && (data.guardrails.input?.length > 0 || data.guardrails.output?.length > 0) && (
-        <div className="px-4 py-3 space-y-2 border-t border-opacity-20 border-white">
+        <div className={`px-4 py-3 space-y-2 border-t border-opacity-20 ${colors.isDark ? 'border-white' : 'border-gray-300'}`}>
           <div className="flex items-center justify-between text-xs">
-            <span className="font-semibold text-white">Guardrails</span>
-            <span className="text-white opacity-70">▼</span>
+            <span className={`font-semibold ${colors.isDark ? 'text-white' : 'text-gray-800'}`}>Guardrails</span>
+            <span className={`${colors.isDark ? 'text-white' : 'text-gray-600'} opacity-70`}>▼</span>
           </div>
           <div className="space-y-2">
             {data.guardrails.input?.length > 0 && (
               <div>
-                <p className="text-xs text-white opacity-70 mb-1">✓ Data validation complete</p>
-                <p className="text-xs text-white opacity-70">✓ Processing integrity verified</p>
+                <p className={`text-xs ${colors.isDark ? 'text-white' : 'text-gray-700'} opacity-70 mb-1`}>✓ Data validation complete</p>
+                <p className={`text-xs ${colors.isDark ? 'text-white' : 'text-gray-700'} opacity-70`}>✓ Processing integrity verified</p>
               </div>
             )}
           </div>

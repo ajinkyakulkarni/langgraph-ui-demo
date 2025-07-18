@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FaPlus, FaFolder, FaShare, FaClock } from 'react-icons/fa';
+import { FaPlus, FaFolder, FaShare, FaClock, FaPen, FaCheck, FaTimes } from 'react-icons/fa';
 import { mockAPI } from '@/app/lib/mockApi';
 import { format } from 'date-fns';
 
@@ -26,6 +26,8 @@ export default function WorkflowList({
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [newWorkflowName, setNewWorkflowName] = useState('');
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingName, setEditingName] = useState('');
 
   useEffect(() => {
     fetchWorkflows();
@@ -72,6 +74,43 @@ export default function WorkflowList({
     } catch (error) {
       console.error('Failed to create workflow:', error);
     }
+  };
+
+  const startRenaming = (workflow: Workflow, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingId(workflow.id);
+    setEditingName(workflow.name);
+  };
+
+  const saveRename = async (workflowId: number) => {
+    if (!editingName.trim() || editingName === workflows.find(w => w.id === workflowId)?.name) {
+      setEditingId(null);
+      return;
+    }
+
+    try {
+      // Update the workflow name using mockAPI
+      const updatedWorkflow = await mockAPI.updateWorkflow(workflowId, { name: editingName });
+      
+      // Update local state
+      setWorkflows(workflows.map(w => 
+        w.id === workflowId ? { ...w, name: editingName } : w
+      ));
+      
+      // If this is the selected workflow, update it
+      if (selectedWorkflow?.id === workflowId) {
+        onSelectWorkflow({ ...selectedWorkflow, name: editingName });
+      }
+      
+      setEditingId(null);
+    } catch (error) {
+      console.error('Failed to rename workflow:', error);
+    }
+  };
+
+  const cancelRename = () => {
+    setEditingId(null);
+    setEditingName('');
   };
 
   return (
@@ -121,14 +160,53 @@ export default function WorkflowList({
           <div
             key={workflow.id}
             onClick={() => onSelectWorkflow(workflow)}
-            className={`p-4 border-b border-gray-200 cursor-pointer hover:bg-gray-100 ${
+            className={`group p-4 border-b border-gray-200 cursor-pointer hover:bg-gray-100 ${
               selectedWorkflow?.id === workflow.id ? 'bg-blue-50' : ''
             }`}
           >
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <h3 className="font-medium text-gray-900">{workflow.name}</h3>
-                {workflow.description && (
+                {editingId === workflow.id ? (
+                  <div className="flex items-center space-x-2" onClick={(e) => e.stopPropagation()}>
+                    <input
+                      type="text"
+                      value={editingName}
+                      onChange={(e) => setEditingName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          saveRename(workflow.id);
+                        } else if (e.key === 'Escape') {
+                          cancelRename();
+                        }
+                      }}
+                      className="flex-1 px-2 py-1 text-sm border border-blue-400 rounded focus:outline-none focus:border-blue-600"
+                      autoFocus
+                    />
+                    <button
+                      onClick={() => saveRename(workflow.id)}
+                      className="p-1 text-green-600 hover:text-green-800"
+                    >
+                      <FaCheck className="w-3 h-3" />
+                    </button>
+                    <button
+                      onClick={cancelRename}
+                      className="p-1 text-red-600 hover:text-red-800"
+                    >
+                      <FaTimes className="w-3 h-3" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center space-x-2">
+                    <h3 className="font-medium text-gray-900">{workflow.name}</h3>
+                    <button
+                      onClick={(e) => startRenaming(workflow, e)}
+                      className="p-1 text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <FaPen className="w-3 h-3" />
+                    </button>
+                  </div>
+                )}
+                {workflow.description && !editingId && (
                   <p className="text-sm text-gray-600 mt-1">
                     {workflow.description}
                   </p>

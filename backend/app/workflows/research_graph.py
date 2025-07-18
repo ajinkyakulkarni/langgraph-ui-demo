@@ -8,7 +8,7 @@ import asyncio
 import json
 import os
 
-from app.core.config import settings
+from app.core.config import Settings
 
 # Define the state
 class ResearchState(TypedDict):
@@ -21,10 +21,22 @@ class ResearchState(TypedDict):
     current_step: str
 
 # Initialize LLM
+# Create fresh settings instance to ensure we get latest env values
+settings = Settings()
+# Debug: Print the API key being used (first 10 chars only for security)
+print(f"DEBUG: Direct env var OPENAI_API_KEY: {os.getenv('OPENAI_API_KEY', 'Not set')[:10]}...")
+print(f"DEBUG: Settings OPENAI_API_KEY: {settings.OPENAI_API_KEY[:10] if settings.OPENAI_API_KEY else 'Not set'}...")
+api_key = settings.OPENAI_API_KEY or os.getenv("OPENAI_API_KEY")
+if api_key:
+    print(f"DEBUG: Final API key starting with: {api_key[:10]}...")
+    print(f"DEBUG: API key length: {len(api_key)}")
+else:
+    print("DEBUG: No API key found!")
+
 llm = ChatOpenAI(
     temperature=0.7, 
     model="gpt-3.5-turbo",
-    api_key=settings.OPENAI_API_KEY or os.getenv("OPENAI_API_KEY")
+    api_key=api_key
 )
 
 # Agent implementations
