@@ -6,12 +6,15 @@ import ReactFlow, {
   Edge,
   Controls,
   Background,
+  BackgroundVariant,
   useNodesState,
   useEdgesState,
   addEdge,
   Connection,
   MarkerType,
   MiniMap,
+  useReactFlow,
+  ReactFlowProvider,
 } from 'react-flow-renderer';
 import ConfigurableNode from './ConfigurableNode';
 
@@ -475,8 +478,17 @@ const WorkflowCanvas = forwardRef(({ workflow, workflowState }: WorkflowCanvasPr
             return '#e5e7eb';
           }}
           maskColor="rgb(50, 50, 50, 0.8)"
+          position="bottom-right"
+          style={{
+            backgroundColor: '#f3f4f6',
+            border: '1px solid #d1d5db',
+            borderRadius: '0.375rem',
+            height: 120,
+            width: 160,
+          }}
+          className="interactive-minimap"
         />
-        <Background variant="dots" gap={12} size={1} />
+        <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
       </ReactFlow>
 
 

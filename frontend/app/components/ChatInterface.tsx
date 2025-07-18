@@ -226,11 +226,11 @@ export default function ChatInterface({ workflow, onWorkflowUpdate }: ChatInterf
 
   return (
     <div className="h-full flex flex-col">
-      <div className="border-b border-gray-200 p-4">
+      <div className="border-b border-gray-200 p-4 flex-none">
         <h2 className="text-lg font-semibold">Research Assistant</h2>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100" style={{ minHeight: 0, maxHeight: 'calc(100vh - 300px)' }}>
         {messages.map((message) => (
           <div
             key={message.id}
@@ -265,7 +265,7 @@ export default function ChatInterface({ workflow, onWorkflowUpdate }: ChatInterf
         <div ref={messagesEndRef} />
       </div>
 
-      <form onSubmit={handleSubmit} className="border-t border-gray-200 p-4">
+      <form onSubmit={handleSubmit} className="border-t border-gray-200 p-4 flex-none">
         <div className="flex flex-col space-y-2">
           <textarea
             value={input}
@@ -273,7 +273,7 @@ export default function ChatInterface({ workflow, onWorkflowUpdate }: ChatInterf
             placeholder="Enter your research question..."
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white resize-none"
             disabled={isLoading}
-            rows={4}
+            rows={3}
           />
           <div className="flex justify-end">
             <button

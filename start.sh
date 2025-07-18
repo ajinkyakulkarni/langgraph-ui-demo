@@ -84,16 +84,8 @@ fi
 # Activate virtual environment and start backend
 source venv/bin/activate
 
-# Create a temporary Python script to run with custom port
-cat > temp_main.py << EOF
-import uvicorn
-from app.main import app
-
-if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=$BACKEND_PORT, reload=True)
-EOF
-
-python temp_main.py > $LOG_DIR/backend.log 2>&1 &
+# Start backend with uvicorn directly (using main_simple.py for demo)
+python -m uvicorn app.main_simple:app --host 0.0.0.0 --port $BACKEND_PORT --reload > $LOG_DIR/backend.log 2>&1 &
 BACKEND_PID=$!
 
 # Wait for backend to start
@@ -112,9 +104,6 @@ if ! curl -s http://localhost:$BACKEND_PORT > /dev/null; then
     cat $LOG_DIR/backend.log
     exit 1
 fi
-
-# Clean up temporary file
-rm -f temp_main.py
 
 # Start Frontend
 echo -e "\n${BLUE}Starting Frontend...${NC}"

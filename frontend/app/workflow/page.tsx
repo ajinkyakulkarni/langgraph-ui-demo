@@ -32,7 +32,7 @@ export default function WorkflowPage() {
         </div>
       </header>
 
-      <div className="flex-1 flex">
+      <div className="flex-1 flex overflow-hidden">
         {/* Sidebar - Workflow List */}
         <div className="w-64 bg-gray-50 border-r border-gray-200 overflow-y-auto">
           <WorkflowList
@@ -42,7 +42,7 @@ export default function WorkflowPage() {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 flex">
+        <div className="flex-1 flex overflow-hidden">
           {/* Workflow Canvas */}
           <div className="flex-1 bg-gray-100">
             <WorkflowCanvas 
@@ -53,7 +53,7 @@ export default function WorkflowPage() {
           </div>
 
           {/* Chat Interface */}
-          <div className="w-96 bg-white border-l border-gray-200">
+          <div className="w-96 bg-white border-l border-gray-200 flex flex-col overflow-hidden">
             <ChatInterface 
               workflow={selectedWorkflow} 
               onWorkflowUpdate={handleWorkflowUpdate}
